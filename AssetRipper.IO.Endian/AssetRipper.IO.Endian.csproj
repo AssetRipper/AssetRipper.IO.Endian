@@ -5,6 +5,7 @@
 		<RootNamespace>AssetRipper.IO.Endian</RootNamespace>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
+		<IsTrimmable>true</IsTrimmable>
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">

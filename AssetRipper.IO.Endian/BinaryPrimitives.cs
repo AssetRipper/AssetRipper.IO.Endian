@@ -6,6 +6,7 @@ using SystemBinaryPrimitives = System.Buffers.Binary.BinaryPrimitives;
 
 namespace AssetRipper.IO.Endian
 {
+	/// <summary>Reads bytes as primitives with specific endianness.</summary>
 	public static class BinaryPrimitives
 	{
 		/// <summary>Reads a <see cref="T:System.Double" /> from the beginning of a read-only span of bytes, as big endian.</summary>
