@@ -6,34 +6,16 @@ namespace AssetRipper.EndianIO
 {
 	internal static class BitConverterExtensions
 	{
-		[StructLayout(LayoutKind.Explicit)]
-		private struct FloatUIntUnion
-		{
-			[FieldOffset(0)]
-			public uint Int;
-			[FieldOffset(0)]
-			public float Float;
-		}
-
-		[StructLayout(LayoutKind.Explicit)]
-		private struct HalfUShortUnion
-		{
-			[FieldOffset(0)]
-			public ushort Short;
-			[FieldOffset(0)]
-			public Half Half;
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ushort ToUInt16(Half value)
 		{
-			return new HalfUShortUnion { Half = value }.Short;
+			return Unsafe.As<Half, ushort>(ref value);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static uint ToUInt32(float value)
 		{
-			return new FloatUIntUnion { Float = value }.Int;
+			return Unsafe.As<float, uint>(ref value);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,13 +27,13 @@ namespace AssetRipper.EndianIO
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Half ToHalf(ushort value)
 		{
-			return new HalfUShortUnion { Short = value }.Half;
+			return Unsafe.As<ushort, Half>(ref value);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float ToSingle(uint value)
 		{
-			return new FloatUIntUnion { Int = value }.Float;
+			return Unsafe.As<uint, float>(ref value);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,5 +1,4 @@
 using System;
-using System.Buffers.Binary;
 using System.IO;
 using System.Text;
 
@@ -41,107 +40,54 @@ namespace AssetRipper.EndianIO
 
 		public override short ReadInt16()
 		{
-			if (isBigEndian)
-				return BinaryPrimitives.ReadInt16BigEndian(base.ReadBytes(2));
-			else
-				return base.ReadInt16();
+			return isBigEndian ? BinaryPrimitives.ReadInt16BigEndian(base.ReadBytes(2)) : base.ReadInt16();
 		}
 
 		public override ushort ReadUInt16()
 		{
-			if (isBigEndian)
-				return BinaryPrimitives.ReadUInt16BigEndian(base.ReadBytes(2));
-			else
-				return base.ReadUInt16();
+			return isBigEndian ? BinaryPrimitives.ReadUInt16BigEndian(base.ReadBytes(2)) : base.ReadUInt16();
 		}
 
 		public override int ReadInt32()
 		{
-			if (isBigEndian)
-				return BinaryPrimitives.ReadInt32BigEndian(base.ReadBytes(4));
-			else
-				return base.ReadInt32();
+			return isBigEndian ? BinaryPrimitives.ReadInt32BigEndian(base.ReadBytes(4)) : base.ReadInt32();
 		}
 
 		public override uint ReadUInt32()
 		{
-			if (isBigEndian)
-				return BinaryPrimitives.ReadUInt32BigEndian(base.ReadBytes(4));
-			else
-				return base.ReadUInt32();
+			return isBigEndian ? BinaryPrimitives.ReadUInt32BigEndian(base.ReadBytes(4)) : base.ReadUInt32();
 		}
 
 		public override long ReadInt64()
 		{
-			if (isBigEndian)
-				return BinaryPrimitives.ReadInt64BigEndian(base.ReadBytes(8));
-			else
-				return base.ReadInt64();
+			return isBigEndian ? BinaryPrimitives.ReadInt64BigEndian(base.ReadBytes(8)) : base.ReadInt64();
 		}
 
 		public override ulong ReadUInt64()
 		{
-			if (isBigEndian)
-				return BinaryPrimitives.ReadUInt64BigEndian(base.ReadBytes(8));
-			else
-				return base.ReadUInt64();
+			return isBigEndian ? BinaryPrimitives.ReadUInt64BigEndian(base.ReadBytes(8)) : base.ReadUInt64();
 		}
 
 #if NET6_0_OR_GREATER
 		public override Half ReadHalf()
 		{
-			if (isBigEndian)
-				return BinaryPrimitives.ReadHalfBigEndian(base.ReadBytes(2));
-			else
-				return base.ReadHalf();
-		}
-#elif NET5_0
-		public Half ReadHalf()
-		{
-			return BitConverterExtensions.ToHalf(ReadUInt16());
+			return isBigEndian ? BinaryPrimitives.ReadHalfBigEndian(base.ReadBytes(2)) : base.ReadHalf();
 		}
 #else
 		public Half ReadHalf()
 		{
-			return Half.ToHalf(ReadUInt16());
+			return isBigEndian ? BinaryPrimitives.ReadHalfBigEndian(base.ReadBytes(2)) : BinaryPrimitives.ReadHalfLittleEndian(base.ReadBytes(2));
 		}
 #endif
 
 		public override float ReadSingle()
 		{
-			if (isBigEndian)
-			{
-#if NET5_0_OR_GREATER
-				return BinaryPrimitives.ReadSingleBigEndian(base.ReadBytes(4));
-#else
-				if (BitConverter.IsLittleEndian) 
-				{
-					byte[] bytes = ReadBytes(4);
-					Array.Reverse(bytes);
-					return BitConverter.ToSingle(bytes, 0);
-				}
-				else
-				{
-					return BitConverter.ToSingle(ReadBytes(4), 0);
-				}
-#endif
-			}
-			else
-			{ 
-				return base.ReadSingle();
-			}
+			return isBigEndian ? BinaryPrimitives.ReadSingleBigEndian(base.ReadBytes(4)) : base.ReadSingle();
 		}
 
 		public override double ReadDouble()
 		{
-			if (isBigEndian)
-#if NET5_0_OR_GREATER
-				return BinaryPrimitives.ReadDoubleBigEndian(base.ReadBytes(8));
-#else
-				return BitConverter.Int64BitsToDouble(ReadInt64());
-#endif
-			else
-				return base.ReadDouble();
+			return isBigEndian ? BinaryPrimitives.ReadDoubleBigEndian(base.ReadBytes(8)) : base.ReadDouble();
 		}
 
 		public override decimal ReadDecimal()
