@@ -1,4 +1,4 @@
-﻿namespace AssetRipper.EndianIO
+﻿namespace AssetRipper.IO.Endian
 {
 	public interface IEndianReadable
 	{

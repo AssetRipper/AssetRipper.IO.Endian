@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace AssetRipper.EndianIO
+namespace AssetRipper.IO.Endian
 {
 	public class EndianWriter : BinaryWriter
 	{

@@ -1,6 +1,6 @@
 using NUnit.Framework;
 
-namespace AssetRipper.EndianIO.Tests
+namespace AssetRipper.IO.Endian.Tests
 {
 	public class Tests
 	{

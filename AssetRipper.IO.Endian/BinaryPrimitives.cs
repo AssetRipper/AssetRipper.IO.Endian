@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 #endif
 using SystemBinaryPrimitives = System.Buffers.Binary.BinaryPrimitives;
 
-namespace AssetRipper.EndianIO
+namespace AssetRipper.IO.Endian
 {
 	public static class BinaryPrimitives
 	{

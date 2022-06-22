@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 
-namespace AssetRipper.EndianIO
+namespace AssetRipper.IO.Endian
 {
 	public sealed class SealedEndianReader : EndianReader
 	{

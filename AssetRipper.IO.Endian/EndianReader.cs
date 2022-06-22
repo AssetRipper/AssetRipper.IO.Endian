@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace AssetRipper.EndianIO
+namespace AssetRipper.IO.Endian
 {
 	public class EndianReader : BinaryReader
 	{
