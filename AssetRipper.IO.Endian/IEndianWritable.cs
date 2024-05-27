@@ -1,7 +1,6 @@
-﻿namespace AssetRipper.IO.Endian
+﻿namespace AssetRipper.IO.Endian;
+
+public interface IEndianWritable
 {
-	public interface IEndianWritable
-	{
-		void Write(EndianWriter writer);
-	}
+	void Write(EndianWriter writer);
 }

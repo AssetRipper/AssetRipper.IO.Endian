@@ -1,16 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net5.0;net6.0</TargetFrameworks>
-		<RootNamespace>AssetRipper.IO.Endian</RootNamespace>
-		<Nullable>enable</Nullable>
-		<LangVersion>latest</LangVersion>
-		<IsTrimmable>true</IsTrimmable>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+		<PackageId>AssetRipper.IO.Endian</PackageId>
+		<PackageTags>C# Texture</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+		<Description>Managed library for reading and writing data with varying endianess.</Description>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<DocumentationFile>bin\AssetRipper.IO.Endian.xml</DocumentationFile>
+		<NoWarn>1591</NoWarn>
 	</PropertyGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-		<PackageReference Include="Half" Version="1.0.0" />
-		<PackageReference Include="System.Memory" Version="4.5.5" />
+	<ItemGroup>
+		<PackageReference Include="AssetRipper.Primitives" Version="3.1.1" />
 	</ItemGroup>
 
 </Project>
