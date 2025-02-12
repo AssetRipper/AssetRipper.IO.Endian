@@ -105,19 +105,14 @@ public class EndianWriter : BinaryWriter
 		Write((byte)'\0');
 	}
 
-	public void WriteArray(bool[] buffer)
+	public void WriteArray(ReadOnlySpan<bool> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
+		Write(buffer.Length);
 
-	public void WriteArray(bool[] buffer, int index, int count)
-	{
-		Write(count);
-
-		int last = index + count;
-		while (index < last)
+		int index = 0;
+		while (index < buffer.Length)
 		{
-			int left = last - index;
+			int left = buffer.Length - index;
 			int toWrite = left < BufferSize ? left : BufferSize;
 			for (int i = 0; i < toWrite; i++, index++)
 			{
@@ -131,32 +126,32 @@ public class EndianWriter : BinaryWriter
 		}
 	}
 
-	public void WriteArray(char[] buffer)
+	public void WriteArray(ReadOnlySpan<char> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
+		Write(buffer.Length);
 
-	public void WriteArray(char[] buffer, int index, int count)
-	{
-		Write(count);
-
-		Write(buffer, index, count);
+		int index = 0;
+		while (index < buffer.Length)
+		{
+			int left = buffer.Length - index;
+			int toWrite = left < BufferSize ? left : BufferSize;
+			for (int i = 0; i < toWrite; i += sizeof(char), index++)
+			{
+				FillInnerBuffer(buffer[index], i);
+			}
+			Write(m_buffer, 0, toWrite);
+		}
 		if (IsAlignArray)
 		{
 			AlignStream();
 		}
 	}
 
-	public void WriteArray(sbyte[] buffer)
+	public void WriteArray(ReadOnlySpan<sbyte> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
+		Write(buffer.Length);
 
-	public void WriteArray(sbyte[] buffer, int index, int count)
-	{
-		Write(count);
-
-		ReadOnlySpan<byte> span = MemoryMarshal.Cast<sbyte, byte>(buffer.AsSpan(index, count));
+		ReadOnlySpan<byte> span = MemoryMarshal.Cast<sbyte, byte>(buffer);
 		Write(span);
 		if (IsAlignArray)
 		{
@@ -164,43 +159,30 @@ public class EndianWriter : BinaryWriter
 		}
 	}
 
-	public void WriteArray(byte[] buffer)
+	public void WriteArray(ReadOnlySpan<byte> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
-
-	public void WriteArray(byte[] buffer, int index, int count)
-	{
-		Write(count);
-		Write(buffer, index, count);
+		Write(buffer.Length);
+		Write(buffer);
 		if (IsAlignArray)
 		{
 			AlignStream();
 		}
 	}
 
-	public void WriteArray(short[] buffer)
+	public void WriteArray(ReadOnlySpan<short> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
+		Write(buffer.Length);
 
-	public void WriteArray(short[] buffer, int index, int count)
-	{
-		Write(count);
-
-		int byteIndex = 0;
-		int byteCount = count * sizeof(short);
-		int last = index + count;
-		while (index < last)
+		int index = 0;
+		while (index < buffer.Length)
 		{
-			int left = byteCount - byteIndex;
+			int left = buffer.Length - index;
 			int toWrite = left < BufferSize ? left : BufferSize;
 			for (int i = 0; i < toWrite; i += sizeof(short), index++)
 			{
 				FillInnerBuffer(unchecked((ushort)buffer[index]), i);
 			}
 			Write(m_buffer, 0, toWrite);
-			byteIndex += toWrite;
 		}
 		if (IsAlignArray)
 		{
@@ -208,28 +190,20 @@ public class EndianWriter : BinaryWriter
 		}
 	}
 
-	public void WriteArray(ushort[] buffer)
+	public void WriteArray(ReadOnlySpan<ushort> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
+		Write(buffer.Length);
 
-	public void WriteArray(ushort[] buffer, int index, int count)
-	{
-		Write(count);
-
-		int byteIndex = 0;
-		int byteCount = count * sizeof(ushort);
-		int last = index + count;
-		while (index < last)
+		int index = 0;
+		while (index < buffer.Length)
 		{
-			int left = byteCount - byteIndex;
+			int left = buffer.Length - index;
 			int toWrite = left < BufferSize ? left : BufferSize;
 			for (int i = 0; i < toWrite; i += sizeof(ushort), index++)
 			{
 				FillInnerBuffer(buffer[index], i);
 			}
 			Write(m_buffer, 0, toWrite);
-			byteIndex += toWrite;
 		}
 		if (IsAlignArray)
 		{
@@ -237,28 +211,20 @@ public class EndianWriter : BinaryWriter
 		}
 	}
 
-	public void WriteArray(int[] buffer)
+	public void WriteArray(ReadOnlySpan<int> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
+		Write(buffer.Length);
 
-	public void WriteArray(int[] buffer, int index, int count)
-	{
-		Write(count);
-
-		int byteIndex = 0;
-		int byteCount = count * sizeof(int);
-		int last = index + count;
-		while (index < last)
+		int index = 0;
+		while (index < buffer.Length)
 		{
-			int left = byteCount - byteIndex;
+			int left = buffer.Length - index;
 			int toWrite = left < BufferSize ? left : BufferSize;
 			for (int i = 0; i < toWrite; i += sizeof(int), index++)
 			{
-				FillInnerBuffer(buffer[index], i);
+				FillInnerBuffer(unchecked((uint)buffer[index]), i);
 			}
 			Write(m_buffer, 0, toWrite);
-			byteIndex += toWrite;
 		}
 		if (IsAlignArray)
 		{
@@ -266,28 +232,20 @@ public class EndianWriter : BinaryWriter
 		}
 	}
 
-	public void WriteArray(uint[] buffer)
+	public void WriteArray(ReadOnlySpan<uint> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
+		Write(buffer.Length);
 
-	public void WriteArray(uint[] buffer, int index, int count)
-	{
-		Write(count);
-
-		int byteIndex = 0;
-		int byteCount = count * sizeof(uint);
-		int last = index + count;
-		while (index < last)
+		int index = 0;
+		while (index < buffer.Length)
 		{
-			int left = byteCount - byteIndex;
+			int left = buffer.Length - index;
 			int toWrite = left < BufferSize ? left : BufferSize;
 			for (int i = 0; i < toWrite; i += sizeof(uint), index++)
 			{
 				FillInnerBuffer(buffer[index], i);
 			}
 			Write(m_buffer, 0, toWrite);
-			byteIndex += toWrite;
 		}
 		if (IsAlignArray)
 		{
@@ -295,28 +253,20 @@ public class EndianWriter : BinaryWriter
 		}
 	}
 
-	public void WriteArray(long[] buffer)
+	public void WriteArray(ReadOnlySpan<long> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
+		Write(buffer.Length);
 
-	public void WriteArray(long[] buffer, int index, int count)
-	{
-		Write(count);
-
-		int byteIndex = 0;
-		int byteCount = count * sizeof(long);
-		int last = index + count;
-		while (index < last)
+		int index = 0;
+		while (index < buffer.Length)
 		{
-			int left = byteCount - byteIndex;
+			int left = buffer.Length - index;
 			int toWrite = left < BufferSize ? left : BufferSize;
 			for (int i = 0; i < toWrite; i += sizeof(long), index++)
 			{
 				FillInnerBuffer(unchecked((ulong)buffer[index]), i);
 			}
 			Write(m_buffer, 0, toWrite);
-			byteIndex += toWrite;
 		}
 		if (IsAlignArray)
 		{
@@ -324,28 +274,20 @@ public class EndianWriter : BinaryWriter
 		}
 	}
 
-	public void WriteArray(ulong[] buffer)
+	public void WriteArray(ReadOnlySpan<ulong> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
+		Write(buffer.Length);
 
-	public void WriteArray(ulong[] buffer, int index, int count)
-	{
-		Write(count);
-
-		int byteIndex = 0;
-		int byteCount = count * sizeof(ulong);
-		int last = index + count;
-		while (index < last)
+		int index = 0;
+		while (index < buffer.Length)
 		{
-			int left = byteCount - byteIndex;
+			int left = buffer.Length - index;
 			int toWrite = left < BufferSize ? left : BufferSize;
 			for (int i = 0; i < toWrite; i += sizeof(ulong), index++)
 			{
 				FillInnerBuffer(buffer[index], i);
 			}
 			Write(m_buffer, 0, toWrite);
-			byteIndex += toWrite;
 		}
 		if (IsAlignArray)
 		{
@@ -353,28 +295,20 @@ public class EndianWriter : BinaryWriter
 		}
 	}
 
-	public void WriteArray(float[] buffer)
+	public void WriteArray(ReadOnlySpan<float> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
+		Write(buffer.Length);
 
-	public void WriteArray(float[] buffer, int index, int count)
-	{
-		Write(count);
-
-		int byteIndex = 0;
-		int byteCount = count * sizeof(float);
-		int last = index + count;
-		while (index < last)
+		int index = 0;
+		while (index < buffer.Length)
 		{
-			int left = byteCount - byteIndex;
+			int left = buffer.Length - index;
 			int toWrite = left < BufferSize ? left : BufferSize;
 			for (int i = 0; i < toWrite; i += sizeof(float), index++)
 			{
 				FillInnerBuffer(BitConverter.SingleToUInt32Bits(buffer[index]), i);
 			}
 			Write(m_buffer, 0, toWrite);
-			byteIndex += toWrite;
 		}
 		if (IsAlignArray)
 		{
@@ -382,28 +316,20 @@ public class EndianWriter : BinaryWriter
 		}
 	}
 
-	public void WriteArray(double[] buffer)
+	public void WriteArray(ReadOnlySpan<double> buffer)
 	{
-		WriteArray(buffer, 0, buffer.Length);
-	}
+		Write(buffer.Length);
 
-	public void WriteArray(double[] buffer, int index, int count)
-	{
-		Write(count);
-
-		int byteIndex = 0;
-		int byteCount = count * sizeof(double);
-		int last = index + count;
-		while (index < last)
+		int index = 0;
+		while (index < buffer.Length)
 		{
-			int left = byteCount - byteIndex;
+			int left = buffer.Length - index;
 			int toWrite = left < BufferSize ? left : BufferSize;
 			for (int i = 0; i < toWrite; i += sizeof(double), index++)
 			{
 				FillInnerBuffer(BitConverter.DoubleToUInt64Bits(buffer[index]), i);
 			}
 			Write(m_buffer, 0, toWrite);
-			byteIndex += toWrite;
 		}
 		if (IsAlignArray)
 		{
@@ -411,7 +337,7 @@ public class EndianWriter : BinaryWriter
 		}
 	}
 
-	public void WriteArray(string[] buffer)
+	public void WriteArray(ReadOnlySpan<string> buffer)
 	{
 		Write(buffer.Length);
 
