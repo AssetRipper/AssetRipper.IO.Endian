@@ -76,6 +76,11 @@ public class EndianWriter : BinaryWriter
 		base.Write(IsLittleEndian ? value : BinaryPrimitives.ReverseEndianness(value));
 	}
 
+	public override void Write(Half value)
+	{
+		Write(BitConverter.HalfToUInt16Bits(value));
+	}
+
 	public override void Write(float value)
 	{
 		Write(BitConverter.SingleToUInt32Bits(value));
@@ -286,6 +291,26 @@ public class EndianWriter : BinaryWriter
 			for (int i = 0; i < toWrite; i += sizeof(ulong), index++)
 			{
 				FillInnerBuffer(buffer[index], i);
+			}
+			Write(m_buffer, 0, toWrite);
+		}
+		if (IsAlignArray)
+		{
+			AlignStream();
+		}
+	}
+
+	public void WriteArray(ReadOnlySpan<Half> buffer)
+	{
+		Write(buffer.Length);
+		int index = 0;
+		while (index < buffer.Length)
+		{
+			int left = buffer.Length - index;
+			int toWrite = left < BufferSize ? left : BufferSize;
+			for (int i = 0; i < toWrite; i += sizeof(ushort), index++)
+			{
+				FillInnerBuffer(BitConverter.HalfToUInt16Bits(buffer[index]), i);
 			}
 			Write(m_buffer, 0, toWrite);
 		}
