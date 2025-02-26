@@ -139,12 +139,14 @@ public partial struct EndianSpanReader
 	/// </summary>
 	/// <remarks>
 	/// The binary format is a 4-byte integer length, followed by length bytes.
-	/// This method does not call <see cref="Align"/>.
+	/// This method does not call <see cref="TryAlign"/>.
+	/// If not successful, the <see cref="Position"/> will be restored to the original value.
 	/// </remarks>
 	/// <param name="result">A new <see cref="Utf8String"/> containing the text, if successful.</param>
 	/// <returns>True if successful. False otherwise.</returns>
 	public bool TryReadUtf8String([NotNullWhen(true)] out Utf8String? result)
 	{
+		int startPosition = Position;
 		if (!TryReadInt32(out int length))
 		{
 			result = default;
@@ -152,6 +154,7 @@ public partial struct EndianSpanReader
 		}
 		if (!TryReadBytesExact(length, out ReadOnlySpan<byte> byteArray))
 		{
+			Position = startPosition;
 			result = default;
 			return false;
 		}
