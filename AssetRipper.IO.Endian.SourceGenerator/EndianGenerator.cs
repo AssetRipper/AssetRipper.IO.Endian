@@ -177,19 +177,7 @@ internal sealed class EndianGenerator : IncrementalGenerator
 
 	/// <summary>
 	/// <code>
-	/// public bool TryReadInt32(out int value)
-	/// {
-	///     if (HasRemainingBytes(sizeof(int)))
-	///     {
-	///         value = ReadInt32();
-	///         return true;
-	///     }
-	///     else
-	///     {
-	///         value = default;
-	///         return false;
-	///     }
-	/// }
+	/// public bool TryReadInt32(out int value) => TryReadPrimitive(out value);
 	/// </code>
 	/// </summary>
 	/// <param name="writer"></param>
@@ -197,20 +185,7 @@ internal sealed class EndianGenerator : IncrementalGenerator
 	/// <param name="returnType"></param>
 	private static void AddTryReadMethod(IndentedTextWriter writer, string typeName, string returnType)
 	{
-		writer.WriteLine($"public bool TryRead{typeName}(out {returnType} value)");
-		using (new CurlyBrackets(writer))
-		{
-			using (new If(writer, $"HasRemainingBytes({SizeOfExpression(returnType)})"))
-			{
-				writer.WriteLine($"value = Read{typeName}();");
-				writer.WriteLine("return true;");
-			}
-			using (new Else(writer))
-			{
-				writer.WriteLine($"value = default;");
-				writer.WriteLine("return false;");
-			}
-		}
+		writer.WriteLine($"public bool TryRead{typeName}(out {returnType} value) => TryReadPrimitive(out value);");
 	}
 
 	private static void AddGenericReadMethod(IndentedTextWriter writer)

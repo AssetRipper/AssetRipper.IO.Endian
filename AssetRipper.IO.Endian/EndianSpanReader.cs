@@ -38,6 +38,23 @@ public partial struct EndianSpanReader
 		return (char)ReadUInt16();
 	}
 
+	/// <summary>
+	/// Try to read a C# primitive type. JIT optimizations should make this as efficient as normal method calls.
+	/// </summary>
+	public bool TryReadPrimitive<T>(out T value) where T : unmanaged
+	{
+		if (HasRemainingBytes(Unsafe.SizeOf<T>()))
+		{
+			value = ReadPrimitive<T>();
+			return true;
+		}
+		else
+		{
+			value = default;
+			return false;
+		}
+	}
+
 	public byte[] ReadBytes(int count)
 	{
 		ThrowIfNegative(count);
@@ -70,10 +87,32 @@ public partial struct EndianSpanReader
 		return sliced;
 	}
 
+	public bool TryReadBytesExact(int count, out ReadOnlySpan<byte> result)
+	{
+		if (count < 0 || !HasRemainingBytes(count))
+		{
+			result = default;
+			return false;
+		}
+		result = data.Slice(Position, count);
+		Position += count;
+		return true;
+	}
+
 	public void ReadBytesExact(Span<byte> buffer)
 	{
 		data.Slice(Position, buffer.Length).CopyTo(buffer);
 		Position += buffer.Length;
+	}
+
+	public bool TryReadBytesExact(Span<byte> buffer)
+	{
+		if (TryReadBytesExact(buffer.Length, out ReadOnlySpan<byte> result))
+		{
+			result.CopyTo(buffer);
+			return true;
+		}
+		return false;
 	}
 
 	private static void ThrowIfNegative(int count)
@@ -100,6 +139,31 @@ public partial struct EndianSpanReader
 	}
 
 	/// <summary>
+	/// Try to read a <see cref="Utf8String"/> from the data.
+	/// </summary>
+	/// <remarks>
+	/// The binary format is a 4-byte integer length, followed by length bytes.
+	/// This method does not call <see cref="Align"/>.
+	/// </remarks>
+	/// <param name="result">A new <see cref="Utf8String"/> containing the text, if successful.</param>
+	/// <returns>True if successful. False otherwise.</returns>
+	public bool TryReadUtf8String([NotNullWhen(true)] out Utf8String? result)
+	{
+		if (!TryReadInt32(out int length))
+		{
+			result = default;
+			return false;
+		}
+		if (!TryReadBytesExact(length, out ReadOnlySpan<byte> byteArray))
+		{
+			result = default;
+			return false;
+		}
+		result = new Utf8String(byteArray);
+		return true;
+	}
+
+	/// <summary>
 	/// Read C-like, UTF8-format, zero-terminated string
 	/// </summary>
 	/// <remarks>
@@ -109,10 +173,25 @@ public partial struct EndianSpanReader
 	/// <returns>A new <see cref="Utf8String"/> containing the text.</returns>
 	public Utf8String ReadNullTerminatedString()
 	{
+		if (!TryReadNullTerminatedString(out Utf8String? result))
+		{
+			throw new EndOfStreamException("Null termination character not found.");
+		}
+		return result;
+	}
+
+	public bool TryReadNullTerminatedString([NotNullWhen(true)] out Utf8String? result)
+	{
 		int length = data.Slice(Position).IndexOf((byte)'\0');
+		if (length < 0)
+		{
+			result = default;
+			return false;
+		}
 		ReadOnlySpan<byte> byteArray = ReadBytesExact(length);
 		Position += 1;
-		return new Utf8String(byteArray);
+		result = new Utf8String(byteArray);
+		return true;
 	}
 
 	/// <summary>
