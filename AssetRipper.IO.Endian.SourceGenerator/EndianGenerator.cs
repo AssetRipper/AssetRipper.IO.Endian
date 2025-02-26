@@ -1,25 +1,24 @@
 ﻿using AssetRipper.Text.SourceGeneration;
+using Microsoft.CodeAnalysis;
+using SGF;
 using System.Buffers.Binary;
 using System.CodeDom.Compiler;
 
 namespace AssetRipper.IO.Endian.SourceGenerator;
 
-internal class Program
+[IncrementalGenerator]
+internal sealed class EndianGenerator : IncrementalGenerator
 {
-	private const string PathToRepository = "../../../";
-	private const string PathToTargetDirectory = PathToRepository + "AssetRipper.IO.Endian/";
-	private const string PathToTestsDirectory = PathToRepository + "AssetRipper.IO.Endian.Tests/";
+	private const string Half = "Half";
 	private const string ReaderStructName = "EndianSpanReader";
 	private const string WriterStructName = "EndianSpanWriter";
-	private const string TestsClassName = "EndianSpanTests";
 	private const string TargetNamespace = "AssetRipper.IO.Endian";
-	private const string TestsNamespace = TargetNamespace + ".Tests";
 	private const string BigEndianField = "bigEndian";
 	private const string OffsetField = "offset";
 	private const string DataField = "data";
 	private const string SliceMethod = nameof(ReadOnlySpan<byte>.Slice);
 
-	private static readonly List<(string, string)> list = new()
+	private static readonly List<(string, string)> endianTypes = new()
 	{
 		(nameof(Int16), "short"),
 		(nameof(UInt16), "ushort"),
@@ -32,7 +31,7 @@ internal class Program
 		(nameof(Double), "double"),
 	};
 
-	private static readonly List<(string, string)> otherList = new()
+	private static readonly List<(string, string)> otherTypes = new()
 	{
 		(nameof(Boolean), "bool"),
 		(nameof(Byte), "byte"),
@@ -40,18 +39,34 @@ internal class Program
 		(nameof(Char), "char"),
 	};
 
-	private static void Main()
+	public EndianGenerator() : base(nameof(EndianGenerator))
 	{
-		DoReaderStruct();
-		DoWriterStruct();
-		DoTests();
-		Console.WriteLine("Done!");
 	}
 
-	private static void DoReaderStruct()
+	public override void OnInitialize(SgfInitializationContext context)
 	{
-		using IndentedTextWriter writer = IndentedTextWriterFactory.Create(PathToTargetDirectory, ReaderStructName);
-		DoReaderStruct(writer);
+		context.RegisterPostInitializationOutput(AddGeneratedCode);
+	}
+
+	private static void AddGeneratedCode(IncrementalGeneratorPostInitializationContext context)
+	{
+		// Reader
+		{
+			using StringWriter stringWriter = new() { NewLine = "\n" };
+			using IndentedTextWriter writer = IndentedTextWriterFactory.Create(stringWriter);
+			DoReaderStruct(writer);
+
+			context.AddSource($"EndianSpanReader.g.cs", stringWriter.ToString());
+		}
+
+		// Writer
+		{
+			using StringWriter stringWriter = new() { NewLine = "\n" };
+			using IndentedTextWriter writer = IndentedTextWriterFactory.Create(stringWriter);
+			DoWriterStruct(writer);
+
+			context.AddSource($"EndianSpanWriter.g.cs", stringWriter.ToString());
+		}
 	}
 
 	private static void DoReaderStruct(IndentedTextWriter writer)
@@ -65,7 +80,7 @@ internal class Program
 			writer.WriteLine($"private bool {BigEndianField};");
 			AddLengthProperty(writer);
 			AddPositionProperty(writer);
-			foreach ((string typeName, string keyword) in list)
+			foreach ((string typeName, string keyword) in endianTypes)
 			{
 				writer.WriteLineNoTabs();
 				AddReadMethod(writer, typeName, keyword);
@@ -73,12 +88,6 @@ internal class Program
 			writer.WriteLineNoTabs();
 			AddGenericReadMethod(writer);
 		}
-	}
-
-	private static void DoWriterStruct()
-	{
-		using IndentedTextWriter writer = IndentedTextWriterFactory.Create(PathToTargetDirectory, WriterStructName);
-		DoWriterStruct(writer);
 	}
 
 	private static void DoWriterStruct(IndentedTextWriter writer)
@@ -92,44 +101,13 @@ internal class Program
 			writer.WriteLine($"private bool {BigEndianField};");
 			AddLengthProperty(writer);
 			AddPositionProperty(writer);
-			foreach ((string typeName, string keyword) in list)
+			foreach ((string typeName, string keyword) in endianTypes)
 			{
 				writer.WriteLineNoTabs();
 				AddWriteMethod(writer, typeName, keyword);
 			}
 			writer.WriteLineNoTabs();
 			AddGenericWriteMethod(writer);
-		}
-	}
-
-	private static void DoTests()
-	{
-		using IndentedTextWriter writer = IndentedTextWriterFactory.Create(PathToTestsDirectory, TestsClassName);
-		DoTests(writer);
-	}
-
-	private static void DoTests(IndentedTextWriter writer)
-	{
-		writer.WriteGeneratedCodeWarning();
-		writer.WriteFileScopedNamespace(TestsNamespace);
-		writer.WriteLine();
-		writer.WriteLine($"public partial class {TestsClassName}");
-		using (new CurlyBrackets(writer))
-		{
-			bool first = true;
-			foreach ((string typeName, string keyWord) in list.Union(otherList))
-			{
-				if (first)
-				{
-					first = false;
-				}
-				else
-				{
-					writer.WriteLineNoTabs();
-				}
-				AddTestMethod(writer, typeName, keyWord);
-			}
-			AddGenericTestMethod(writer);
 		}
 	}
 
@@ -197,7 +175,7 @@ internal class Program
 		using (new CurlyBrackets(writer))
 		{
 			string elsePrefix = "";
-			foreach ((string typeName, string keyword) in list.Union(otherList))
+			foreach ((string typeName, string keyword) in endianTypes.Concat(otherTypes))
 			{
 				writer.WriteLine($"{elsePrefix}if (typeof(T) == typeof({keyword}))");
 				using (new CurlyBrackets(writer))
@@ -259,7 +237,7 @@ internal class Program
 		using (new CurlyBrackets(writer))
 		{
 			string elsePrefix = "";
-			foreach ((string typeName, string keyword) in list.Union(otherList))
+			foreach ((string typeName, string keyword) in endianTypes.Concat(otherTypes))
 			{
 				writer.WriteLine($"{elsePrefix}if (typeof(T) == typeof({keyword}))");
 				using (new CurlyBrackets(writer))
@@ -280,65 +258,6 @@ internal class Program
 			(true, false) => $"{nameof(BinaryPrimitives)}.Write{typeName}BigEndian",
 			(false, false) => $"{nameof(BinaryPrimitives)}.Write{typeName}LittleEndian",
 		};
-	}
-
-	/// <summary>
-	/// <code>
-	/// [Theory]
-	/// public void BooleanTest(EndianType endianType)
-	/// {
-	///     byte[] data = new byte[sizeof(bool)];
-	///     bool value1 = RandomData.NextBoolean();
-	/// 
-	///     EndianSpanWriter writer = new EndianSpanWriter(data, endianType);
-	///     Assert.That(writer.Length, Is.EqualTo(sizeof(bool));
-	///     writer.Write(value1);
-	///     Assert.That(writer.Position, Is.EqualTo(sizeof(bool)));
-	/// 
-	///     EndianSpanReader reader = new EndianSpanReader(data, endianType);
-	///     Assert.That(reader.Length, Is.EqualTo(sizeof(bool));
-	///     bool value2 = reader.ReadBoolean();
-	///     Assert.That(reader.Position, Is.EqualTo(sizeof(bool)));
-	///     Assert.That(value2, Is.EqualTo(value1));
-	/// }
-	/// </code>
-	/// </summary>
-	/// <param name="writer"></param>
-	/// <param name="typeName"></param>
-	/// <param name="parameterType"></param>
-	/// <param name="bigEndian"></param>
-	private static void AddTestMethod(IndentedTextWriter writer, string typeName, string parameterType)
-	{
-		const string endianArgumentName = "endianType";
-		writer.WriteLine("[Theory]");
-		writer.WriteLine($"public void {typeName}Test(EndianType {endianArgumentName})");
-		using (new CurlyBrackets(writer))
-		{
-			writer.WriteLine($"byte[] data = new byte[{SizeOfExpression(parameterType)}];");
-			writer.WriteLine($"{parameterType} value1 = RandomData.Next{typeName}();");
-			writer.WriteLineNoTabs();
-			writer.WriteLine($"{WriterStructName} writer = new {WriterStructName}(data, {endianArgumentName});");
-			writer.WriteLine($"Assert.That(writer.Length, Is.EqualTo({SizeOfExpression(parameterType)}));");
-			writer.WriteLine("writer.Write(value1);");
-			writer.WriteLine($"Assert.That(writer.Position, Is.EqualTo({SizeOfExpression(parameterType)}));");
-			writer.WriteLineNoTabs();
-			writer.WriteLine($"{ReaderStructName} reader = new {ReaderStructName}(data, {endianArgumentName});");
-			writer.WriteLine($"Assert.That(reader.Length, Is.EqualTo({SizeOfExpression(parameterType)}));");
-			writer.WriteLine($"{parameterType} value2 = reader.Read{typeName}();");
-			writer.WriteLine($"Assert.That(reader.Position, Is.EqualTo({SizeOfExpression(parameterType)}));");
-			writer.WriteLine("Assert.That(value2, Is.EqualTo(value1));");
-		}
-	}
-
-	private static void AddGenericTestMethod(IndentedTextWriter writer)
-	{
-		writer.WriteLineNoTabs();
-		foreach ((_, string keyWord) in list.Union(otherList))
-		{
-			writer.WriteLine($"[TestCase<{keyWord}>(EndianType.LittleEndian)]");
-			writer.WriteLine($"[TestCase<{keyWord}>(EndianType.BigEndian)]");
-		}
-		writer.WriteLine("public partial void TestGenericReadWrite<T>(EndianType endianType) where T : unmanaged;");
 	}
 
 	private static string SizeOfExpression(string type)
