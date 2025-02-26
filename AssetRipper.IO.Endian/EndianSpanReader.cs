@@ -18,21 +18,25 @@ public partial struct EndianSpanReader
 		set => bigEndian = value == EndianType.BigEndian;
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	public bool ReadBoolean()
 	{
 		return ReadByte() != 0;
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	public byte ReadByte()
 	{
 		return data[offset++];
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	public sbyte ReadSByte()
 	{
 		return unchecked((sbyte)ReadByte());
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	public char ReadChar()
 	{
 		return (char)ReadUInt16();
@@ -57,12 +61,12 @@ public partial struct EndianSpanReader
 
 	public byte[] ReadBytes(int count)
 	{
-		ThrowIfNegative(count);
+		ArgumentOutOfRangeException.ThrowIfNegative(count);
 
 		int resultLength = Math.Min(count, Length - Position);
 		if (resultLength == 0)
 		{
-			return Array.Empty<byte>();
+			return [];
 		}
 
 		byte[] result = new byte[resultLength];
@@ -81,7 +85,7 @@ public partial struct EndianSpanReader
 
 	public ReadOnlySpan<byte> ReadBytesExact(int count)
 	{
-		ThrowIfNegative(count);
+		ArgumentOutOfRangeException.ThrowIfNegative(count);
 		ReadOnlySpan<byte> sliced = data.Slice(Position, count);
 		Position += count;
 		return sliced;
@@ -113,14 +117,6 @@ public partial struct EndianSpanReader
 			return true;
 		}
 		return false;
-	}
-
-	private static void ThrowIfNegative(int count)
-	{
-		if (count < 0)
-		{
-			throw new ArgumentOutOfRangeException(nameof(count), count, "Value cannot be negative.");
-		}
 	}
 
 	/// <summary>
@@ -200,6 +196,7 @@ public partial struct EndianSpanReader
 	/// <remarks>
 	/// If the <see cref="Position"/> is not divisible by 4, this will move it to the next multiple of 4.
 	/// </remarks>
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	public void Align()
 	{
 		Position = (Position + 3) & ~3;
