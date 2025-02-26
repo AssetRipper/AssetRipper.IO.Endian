@@ -138,7 +138,9 @@ internal sealed class EndianGenerator : IncrementalGenerator
 		writer.WriteLine("public int Position");
 		using (new CurlyBrackets(writer))
 		{
+			writer.WriteAggressiveInliningAttribute();
 			writer.WriteLine($"readonly get => {OffsetField};");
+			writer.WriteAggressiveInliningAttribute();
 			writer.WriteLine($"set => {OffsetField} = value;");
 		}
 	}
@@ -161,6 +163,7 @@ internal sealed class EndianGenerator : IncrementalGenerator
 	private static void AddReadMethod(IndentedTextWriter writer, string typeName, string returnType)
 	{
 		const string ResultVariable = "result";
+		writer.WriteAggressiveInliningAttribute();
 		writer.WriteLine($"public {returnType} Read{typeName}()");
 		using (new CurlyBrackets(writer))
 		{
@@ -185,12 +188,14 @@ internal sealed class EndianGenerator : IncrementalGenerator
 	/// <param name="returnType"></param>
 	private static void AddTryReadMethod(IndentedTextWriter writer, string typeName, string returnType)
 	{
+		writer.WriteAggressiveInliningAttribute();
 		writer.WriteLine($"public bool TryRead{typeName}(out {returnType} value) => TryReadPrimitive(out value);");
 	}
 
 	private static void AddGenericReadMethod(IndentedTextWriter writer)
 	{
 		writer.WriteSummaryDocumentation("Read a C# primitive type. JIT optimizations should make this as efficient as normal method calls.");
+		writer.WriteAggressiveInliningAttribute();
 		writer.WriteLine("public T ReadPrimitive<T>() where T : unmanaged");
 		using (new CurlyBrackets(writer))
 		{
@@ -231,6 +236,7 @@ internal sealed class EndianGenerator : IncrementalGenerator
 	private static void AddWriteMethod(IndentedTextWriter writer, string typeName, string parameterType)
 	{
 		const string ValueParameter = "value";
+		writer.WriteAggressiveInliningAttribute();
 		writer.WriteLine($"public void Write({parameterType} {ValueParameter})");
 		using (new CurlyBrackets(writer))
 		{
@@ -253,6 +259,7 @@ internal sealed class EndianGenerator : IncrementalGenerator
 	private static void AddGenericWriteMethod(IndentedTextWriter writer)
 	{
 		writer.WriteSummaryDocumentation("Write a C# primitive type. JIT optimizations should make this as efficient as normal method calls.");
+		writer.WriteAggressiveInliningAttribute();
 		writer.WriteLine("public void WritePrimitive<T>(T value) where T : unmanaged");
 		using (new CurlyBrackets(writer))
 		{
