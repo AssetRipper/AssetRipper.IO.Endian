@@ -202,6 +202,21 @@ public partial struct EndianSpanReader
 		Position = (Position + 3) & ~3;
 	}
 
+	/// <summary>
+	/// Try to align the <see cref="Position"/> to a next multiple of 4.
+	/// </summary>
+	/// <returns>True if successful.</returns>
+	public bool TryAlign()
+	{
+		int newPosition = (Position + 3) & ~3;
+		if (newPosition > Length)
+		{
+			return false;
+		}
+		Position = newPosition;
+		return true;
+	}
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	private readonly bool HasRemainingBytes(int count)
 	{
