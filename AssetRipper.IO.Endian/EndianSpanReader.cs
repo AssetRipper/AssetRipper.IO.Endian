@@ -1,4 +1,5 @@
 ﻿using AssetRipper.Primitives;
+using System.Runtime.CompilerServices;
 
 namespace AssetRipper.IO.Endian;
 
@@ -123,5 +124,11 @@ public partial struct EndianSpanReader
 	public void Align()
 	{
 		Position = (Position + 3) & ~3;
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+	private readonly bool HasRemainingBytes(int count)
+	{
+		return Length - Position >= count;
 	}
 }

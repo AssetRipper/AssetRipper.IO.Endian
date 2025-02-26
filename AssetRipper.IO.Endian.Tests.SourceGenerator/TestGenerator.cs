@@ -37,14 +37,26 @@ public sealed class TestGenerator : IncrementalGenerator
 
 	private static void AddGeneratedCode(IncrementalGeneratorPostInitializationContext context)
 	{
-		using StringWriter stringWriter = new() { NewLine = "\n" };
-		using IndentedTextWriter writer = IndentedTextWriterFactory.Create(stringWriter);
-		DoTests(writer);
+		// EndianSpanTests
+		{
+			using StringWriter stringWriter = new() { NewLine = "\n" };
+			using IndentedTextWriter writer = IndentedTextWriterFactory.Create(stringWriter);
+			EndianSpanTests(writer);
 
-		context.AddSource($"EndianSpanTests.g.cs", stringWriter.ToString());
+			context.AddSource($"EndianSpanTests.g.cs", stringWriter.ToString());
+		}
+
+		// EndianSpanReaderTests
+		{
+			using StringWriter stringWriter = new() { NewLine = "\n" };
+			using IndentedTextWriter writer = IndentedTextWriterFactory.Create(stringWriter);
+			EndianSpanReaderTests(writer);
+
+			context.AddSource($"EndianSpanReaderTests.g.cs", stringWriter.ToString());
+		}
 	}
 
-	private static void DoTests(IndentedTextWriter writer)
+	private static void EndianSpanTests(IndentedTextWriter writer)
 	{
 		writer.WriteGeneratedCodeWarning();
 		writer.WriteFileScopedNamespace("AssetRipper.IO.Endian.Tests");
@@ -126,6 +138,40 @@ public sealed class TestGenerator : IncrementalGenerator
 			writer.WriteLine($"[TestCase<{keyWord}>(EndianType.BigEndian)]");
 		}
 		writer.WriteLine("public partial void TestGenericReadWrite<T>(EndianType endianType) where T : unmanaged;");
+	}
+
+	private static void EndianSpanReaderTests(IndentedTextWriter writer)
+	{
+		writer.WriteGeneratedCodeWarning();
+		writer.WriteFileScopedNamespace("AssetRipper.IO.Endian.Tests");
+		writer.WriteLine();
+		writer.WriteLine($"public partial class EndianSpanReaderTests");
+		using (new CurlyBrackets(writer))
+		{
+			foreach ((string typeName, string keyWord) in list)
+			{
+				// Try Read Empty Test
+				writer.WriteLine("[Theory]");
+				writer.WriteLine($"public void TryRead{typeName}_Empty(EndianType endianType)");
+				using (new CurlyBrackets(writer))
+				{
+					writer.WriteLine($"EndianSpanReader reader = new EndianSpanReader([], endianType);");
+					writer.WriteLine($"Assert.That(reader.TryRead{typeName}(out _), Is.False);");
+				}
+				writer.WriteLineNoTabs();
+
+				// Try Read Full Test
+				writer.WriteLine("[Theory]");
+				writer.WriteLine($"public void TryRead{typeName}_Successful(EndianType endianType)");
+				using (new CurlyBrackets(writer))
+				{
+					writer.WriteLine($"ReadOnlySpan<byte> data = stackalloc byte[{SizeOfExpression(keyWord)}];");
+					writer.WriteLine($"EndianSpanReader reader = new EndianSpanReader(data, endianType);");
+					writer.WriteLine($"Assert.That(reader.TryRead{typeName}(out _), Is.True);");
+				}
+				writer.WriteLineNoTabs();
+			}
+		}
 	}
 
 	private static string SizeOfExpression(string type)

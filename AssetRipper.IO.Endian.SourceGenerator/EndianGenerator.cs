@@ -18,7 +18,7 @@ internal sealed class EndianGenerator : IncrementalGenerator
 	private const string DataField = "data";
 	private const string SliceMethod = nameof(ReadOnlySpan<byte>.Slice);
 
-	private static readonly List<(string, string)> endianTypes = new()
+	private static List<(string, string)> EndianTypes { get; } = new()
 	{
 		(nameof(Int16), "short"),
 		(nameof(UInt16), "ushort"),
@@ -31,13 +31,15 @@ internal sealed class EndianGenerator : IncrementalGenerator
 		(nameof(Double), "double"),
 	};
 
-	private static readonly List<(string, string)> otherTypes = new()
+	private static List<(string, string)> OtherTypes { get; } = new()
 	{
 		(nameof(Boolean), "bool"),
 		(nameof(Byte), "byte"),
 		(nameof(SByte), "sbyte"),
 		(nameof(Char), "char"),
 	};
+
+	private static IEnumerable<(string, string)> AllTypes => EndianTypes.Concat(OtherTypes);
 
 	public EndianGenerator() : base(nameof(EndianGenerator))
 	{
@@ -80,10 +82,15 @@ internal sealed class EndianGenerator : IncrementalGenerator
 			writer.WriteLine($"private bool {BigEndianField};");
 			AddLengthProperty(writer);
 			AddPositionProperty(writer);
-			foreach ((string typeName, string keyword) in endianTypes)
+			foreach ((string typeName, string keyword) in EndianTypes)
 			{
 				writer.WriteLineNoTabs();
 				AddReadMethod(writer, typeName, keyword);
+			}
+			foreach ((string typeName, string keyword) in AllTypes)
+			{
+				writer.WriteLineNoTabs();
+				AddTryReadMethod(writer, typeName, keyword);
 			}
 			writer.WriteLineNoTabs();
 			AddGenericReadMethod(writer);
@@ -101,7 +108,7 @@ internal sealed class EndianGenerator : IncrementalGenerator
 			writer.WriteLine($"private bool {BigEndianField};");
 			AddLengthProperty(writer);
 			AddPositionProperty(writer);
-			foreach ((string typeName, string keyword) in endianTypes)
+			foreach ((string typeName, string keyword) in EndianTypes)
 			{
 				writer.WriteLineNoTabs();
 				AddWriteMethod(writer, typeName, keyword);
@@ -168,6 +175,44 @@ internal sealed class EndianGenerator : IncrementalGenerator
 		}
 	}
 
+	/// <summary>
+	/// <code>
+	/// public bool TryReadInt32(out int value)
+	/// {
+	///     if (HasRemainingBytes(sizeof(int)))
+	///     {
+	///         value = ReadInt32();
+	///         return true;
+	///     }
+	///     else
+	///     {
+	///         value = default;
+	///         return false;
+	///     }
+	/// }
+	/// </code>
+	/// </summary>
+	/// <param name="writer"></param>
+	/// <param name="typeName"></param>
+	/// <param name="returnType"></param>
+	private static void AddTryReadMethod(IndentedTextWriter writer, string typeName, string returnType)
+	{
+		writer.WriteLine($"public bool TryRead{typeName}(out {returnType} value)");
+		using (new CurlyBrackets(writer))
+		{
+			using (new If(writer, $"HasRemainingBytes({SizeOfExpression(returnType)})"))
+			{
+				writer.WriteLine($"value = Read{typeName}();");
+				writer.WriteLine("return true;");
+			}
+			using (new Else(writer))
+			{
+				writer.WriteLine($"value = default;");
+				writer.WriteLine("return false;");
+			}
+		}
+	}
+
 	private static void AddGenericReadMethod(IndentedTextWriter writer)
 	{
 		writer.WriteSummaryDocumentation("Read a C# primitive type. JIT optimizations should make this as efficient as normal method calls.");
@@ -175,7 +220,7 @@ internal sealed class EndianGenerator : IncrementalGenerator
 		using (new CurlyBrackets(writer))
 		{
 			string elsePrefix = "";
-			foreach ((string typeName, string keyword) in endianTypes.Concat(otherTypes))
+			foreach ((string typeName, string keyword) in AllTypes)
 			{
 				writer.WriteLine($"{elsePrefix}if (typeof(T) == typeof({keyword}))");
 				using (new CurlyBrackets(writer))
@@ -237,7 +282,7 @@ internal sealed class EndianGenerator : IncrementalGenerator
 		using (new CurlyBrackets(writer))
 		{
 			string elsePrefix = "";
-			foreach ((string typeName, string keyword) in endianTypes.Concat(otherTypes))
+			foreach ((string typeName, string keyword) in AllTypes)
 			{
 				writer.WriteLine($"{elsePrefix}if (typeof(T) == typeof({keyword}))");
 				using (new CurlyBrackets(writer))
