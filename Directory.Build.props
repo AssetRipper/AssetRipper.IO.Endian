@@ -8,8 +8,7 @@
 		<CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
 		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 
-		<Version>2.0.2</Version>
-		<AssemblyVersion>$(Version)</AssemblyVersion>
+		<VersionPrefix>2.1.0</VersionPrefix>
 		<Copyright>Copyright © ds5678</Copyright>
 		<Authors>ds5678</Authors>
 		<RepositoryUrl>https://github.com/AssetRipper/AssetRipper.IO.Endian</RepositoryUrl>
