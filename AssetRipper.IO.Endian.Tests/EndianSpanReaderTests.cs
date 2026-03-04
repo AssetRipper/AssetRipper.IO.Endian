@@ -60,13 +60,13 @@ public partial class EndianSpanReaderTests
 	public void ReadBytesWorksForZeroLengthReading(EndianType endianType)
 	{
 		EndianSpanReader reader = new EndianSpanReader(default, endianType);
-		Assert.That(reader.Length, Is.EqualTo(0));
+		Assert.That(reader.Length, Is.Zero);
 
-		Assert.That(reader.ReadBytes(0).Length, Is.EqualTo(0));
-		Assert.That(reader.ReadBytes(Span<byte>.Empty), Is.EqualTo(0));
-		Assert.That(reader.ReadBytesExact(0).Length, Is.EqualTo(0));
+		Assert.That(reader.ReadBytes(0).Length, Is.Zero);
+		Assert.That(reader.ReadBytes(Span<byte>.Empty), Is.Zero);
+		Assert.That(reader.ReadBytesExact(0).Length, Is.Zero);
 		reader.ReadBytes(Span<byte>.Empty);
-		Assert.That(reader.Position, Is.EqualTo(0));
+		Assert.That(reader.Position, Is.Zero);
 	}
 
 	[Theory]

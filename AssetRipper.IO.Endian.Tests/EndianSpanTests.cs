@@ -37,8 +37,8 @@ public partial class EndianSpanTests
 		Assert.That(writer.Position, Is.EqualTo(2 * sizeof(int)));
 
 		EndianSpanReader reader = new EndianSpanReader(data, endianType);
-		Assert.That(reader.Position, Is.EqualTo(0));
-		Assert.That(reader.ReadInt32(), Is.EqualTo(0));
+		Assert.That(reader.Position, Is.Zero);
+		Assert.That(reader.ReadInt32(), Is.Zero);
 		Assert.That(reader.Position, Is.EqualTo(sizeof(int)));
 		int value2 = reader.ReadInt32();
 		Assert.That(reader.Position, Is.EqualTo(2 * sizeof(int)));
