@@ -110,6 +110,12 @@ public class EndianWriter : BinaryWriter
 		Write((byte)'\0');
 	}
 
+	public void WriteStringZeroTerm(Utf8String value)
+	{
+		Write(value.Data);
+		Write((byte)'\0');
+	}
+
 	public void WriteArray(ReadOnlySpan<bool> buffer)
 	{
 		Write(buffer.Length);

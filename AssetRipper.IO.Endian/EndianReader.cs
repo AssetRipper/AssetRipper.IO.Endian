@@ -1,3 +1,4 @@
+using AssetRipper.Primitives;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Text;
@@ -14,8 +15,6 @@ public class EndianReader : BinaryReader
 	}
 
 	public bool IsAlignArray { get; }
-
-	protected const int BufferSize = 4096;
 
 	// private readonly byte[] m_buffer = new byte[BufferSize];
 
@@ -234,9 +233,10 @@ public class EndianReader : BinaryReader
 	/// Read C like UTF8 format zero terminated string
 	/// </summary>
 	/// <returns>Read string</returns>
-	public string ReadStringZeroTerm()
+	public Utf8String ReadStringZeroTerm()
 	{
-		if (ReadStringZeroTerm(BufferSize, out string? result))
+		const int MaxSize = 4096; // Arbitrary limit
+		if (ReadStringZeroTerm(MaxSize, out Utf8String? result))
 		{
 			return result;
 		}
@@ -249,16 +249,15 @@ public class EndianReader : BinaryReader
 	/// <param name="maxLength">Max allowed character count to read</param>
 	/// <param name="result">Read string if found</param>
 	/// <returns>Whether zero term has been found</returns>
-	public bool ReadStringZeroTerm(int maxLength, [NotNullWhen(true)] out string? result)
+	public bool ReadStringZeroTerm(int maxLength, [NotNullWhen(true)] out Utf8String? result)
 	{
-		// maxLength = Math.Min(maxLength, m_buffer.Length);
-		Span<byte> buffer = (stackalloc byte[maxLength]);
+		Span<byte> buffer = stackalloc byte[maxLength];
 		for (int i = 0; i < maxLength; i++)
 		{
 			byte bt = ReadByte();
 			if (bt == 0)
 			{
-				result = Encoding.UTF8.GetString(buffer[..i]);
+				result = new(buffer[..i]);
 				return true;
 			}
 			buffer[i] = bt;
