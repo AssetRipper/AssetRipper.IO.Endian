@@ -216,7 +216,7 @@ public class EndianReader : BinaryReader
 		}
 	}
 
-	public void ReadExactly(Span<byte> buffer)
+	public sealed override void ReadExactly(Span<byte> buffer)
 	{
 		Span<byte> bufferSegment = buffer;
 		do
